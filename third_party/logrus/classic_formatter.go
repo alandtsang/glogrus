@@ -20,10 +20,16 @@ func (f *ClassicFormatter) Format(entry *Entry) ([]byte, error) {
 	if f.FieldsDelimiter == "" {
 		f.FieldsDelimiter = " "
 	}
-	fmt.Fprintf(b, "%s [%s][%s:%d][%s] %s",
-		entry.Time.Format(f.TimestampFormat), entry.Level.String(),
-		entry.Data["file"], entry.Data["line"], entry.Data["func"],
-		entry.Message)
+
+	if entry.Level.String() == "info" {
+		fmt.Fprintf(b, "%s [%s] %s",
+			entry.Time.Format(f.TimestampFormat), entry.Level.String(), entry.Message)
+	} else {
+		fmt.Fprintf(b, "%s [%s][%s:%d][%s] %s",
+			entry.Time.Format(f.TimestampFormat), entry.Level.String(),
+			entry.Data["file"], entry.Data["line"], entry.Data["func"],
+			entry.Message)
+	}
 
 	// sort fields
 	keys := make([]string, 0, len(entry.Data))
