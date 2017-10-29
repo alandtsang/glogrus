@@ -45,10 +45,26 @@ func (entry *Entry) Reader() (*bytes.Buffer, error) {
 	return bytes.NewBuffer(serialized), err
 }
 
+// Returns a reader for the entry, which is a proxy to the formatter.
+func (entry *Entry) ReaderEx() (*bytes.Buffer, error) {
+	serialized, err := entry.Logger.Formatter.FormatEx(entry)
+	return bytes.NewBuffer(serialized), err
+}
+
 // Returns the string representation from the reader and ultimately the
 // formatter.
 func (entry *Entry) String() (string, error) {
 	reader, err := entry.Reader()
+	if err != nil {
+		return "", err
+	}
+
+	return reader.String(), err
+}
+
+// Returns the string representation from the reader and ultimately the formatter.
+func (entry *Entry) StringEx() (string, error) {
+	reader, err := entry.ReaderEx()
 	if err != nil {
 		return "", err
 	}
@@ -112,6 +128,44 @@ func (entry Entry) log(level Level, msg string) {
 	if level <= PanicLevel {
 		panic(&entry)
 	}
+}
+
+// This function is not declared with a pointer value because otherwise
+// race conditions will occur when using multiple goroutines
+func (entry Entry) logEx(level Level, msg string) {
+	entry.Time = time.Now()
+	entry.Level = level
+	entry.Message = msg
+
+	if err := entry.Logger.Hooks.Fire(level, &entry); err != nil {
+		entry.Logger.mu.Lock()
+		fmt.Fprintf(os.Stderr, "Failed to fire hook: %v\n", err)
+		entry.Logger.mu.Unlock()
+	}
+
+	reader, err := entry.ReaderEx()
+	if err != nil {
+		entry.Logger.mu.Lock()
+		fmt.Fprintf(os.Stderr, "Failed to obtain reader, %v\n", err)
+		entry.Logger.mu.Unlock()
+	}
+
+	entry.Logger.mu.Lock()
+	defer entry.Logger.mu.Unlock()
+
+	_, err = io.Copy(entry.Logger.Out, reader)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to write to log, %v\n", err)
+	}
+
+	// To avoid Entry#log() returning a value that only would make sense for
+	// panic() to use in Entry#Panic(), we avoid the allocation by checking
+	// directly here.
+	/*
+		if level <= PanicLevel {
+						panic(&entry)
+								}
+	*/
 }
 
 func (entry *Entry) Debug(args ...interface{}) {
@@ -261,4 +315,9 @@ func (entry *Entry) Panicln(args ...interface{}) {
 func (entry *Entry) sprintlnn(args ...interface{}) string {
 	msg := fmt.Sprintln(args...)
 	return msg[:len(msg)-1]
+}
+
+func (entry *Entry) Outf(format string, args ...interface{}) {
+	// entry.Debug(fmt.Sprintf(format, args...))
+	entry.logEx(FatalLevel, fmt.Sprintf(format, args...))
 }

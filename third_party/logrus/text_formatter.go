@@ -96,6 +96,46 @@ func (f *TextFormatter) Format(entry *Entry) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func (f *TextFormatter) FormatEx(entry *Entry) ([]byte, error) {
+	var keys []string = make([]string, 0, len(entry.Data))
+	for k := range entry.Data {
+		keys = append(keys, k)
+	}
+
+	if !f.DisableSorting {
+		sort.Strings(keys)
+	}
+
+	b := &bytes.Buffer{}
+
+	prefixFieldClashes(entry.Data)
+
+	isColorTerminal := isTerminal && (runtime.GOOS != "windows")
+	isColored := (f.ForceColors || isColorTerminal) && !f.DisableColors
+
+	timestampFormat := f.TimestampFormat
+	if timestampFormat == "" {
+		timestampFormat = DefaultTimestampFormat
+	}
+	if isColored {
+		f.printColored(b, entry, keys, timestampFormat)
+	} else {
+		if !f.DisableTimestamp {
+			f.appendKeyValue(b, "time", entry.Time.Format(timestampFormat))
+		}
+		f.appendKeyValue(b, "level", entry.Level.String())
+		if entry.Message != "" {
+			f.appendKeyValue(b, "msg", entry.Message)
+		}
+		for _, key := range keys {
+			f.appendKeyValue(b, key, entry.Data[key])
+		}
+	}
+
+	b.WriteByte('\n')
+	return b.Bytes(), nil
+}
+
 func (f *TextFormatter) printColored(b *bytes.Buffer, entry *Entry, keys []string, timestampFormat string) {
 	var levelColor int
 	switch entry.Level {
