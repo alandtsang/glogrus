@@ -13,7 +13,6 @@ var LOG *Log.Logger = nil
 func main() {
 	// load config file
 	fmt.Println("Load config ...")
-	//if err := config.CONF.LoadConfig(cfgFile); err != nil {
 	if err := config.CONF.LoadConfig("./config/config.json"); err != nil {
 		fmt.Println("Load config failed: ", err.Error())
 		return
@@ -30,6 +29,9 @@ func main() {
 	fmt.Println("Init log success")
 
 	caught := 12
-	LOG.Debugln("Debug value:", caught)
+
+	LOG.Errorln("Error Level")
+	LOG.Warnln("Warn Level")
 	LOG.Infoln("Caught a signal:", caught)
+	LOG.Debugln("Debug value:", caught)
 }

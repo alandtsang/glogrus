@@ -31,7 +31,7 @@ func (c *EnvConfig) LoadConfig(fileName string) error {
 
 	c.LogConfig = LogConfig{
 		LogDir:   "../logs/",
-		LogLevel: 4,
+		LogLevel: 4, // 1:Fatal 2:Error 3:Warn 4:Info 5:Debug
 	}
 
 	if err := json.Unmarshal(data, c); err != nil {

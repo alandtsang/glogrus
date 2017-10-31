@@ -1,7 +1,12 @@
 # glogrus
-logrus
+
+[![License](https://img.shields.io/badge/license-Apache%202-4EB1BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
+
+logrus common format
 
 ## Set config
+Default log level is 4, meaning info, other level print detailed file location, line number, and the function name.
+
 eg.
 ```
 "log_dir":"/tmp",
@@ -10,15 +15,36 @@ eg.
 
 cat /tmp/test.log
 ```
-2017-10-29 23:17:18 [info][main.go:34][main] Caught a signal: 12
+2017-10-31 10:36:22 [info] Caught a signal: 12
 ```
 
 ## Log level
 
-debug: set `log_level` to 5
+- Fatal: 1
+- Error: 2
+- Warn: 3
+- Info: 4
+- Debug: 5
+
 
 ```
-2017-10-29 23:24:36 [debug][main.go:33][main] Debug value: 12
-2017-10-29 23:24:36 [info][main.go:34][main] Caught a signal: 12
+"log_dir":"/tmp",
+"log_level":5
 ```
+
+```
+2017-10-31 11:58:13 [error][main.go:33][main] Error Level
+2017-10-31 11:58:13 [warning][main.go:34][main] Warn Level
+2017-10-31 11:58:13 [info] Caught a signal: 12
+2017-10-31 11:58:13 [debug][main.go:36][main] Debug value: 12
+```
+
+# Get Help
+
+The fastest way to get response is to send email to my mail:
+- <zengxianglong0@gmail.com>
+
+# License
+
+Please refer to [LICENSE](https://github.com/alandtsang/glogrus/blob/master/LICENSE) file.
 
